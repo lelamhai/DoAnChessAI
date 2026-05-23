@@ -9,6 +9,15 @@ public class ChessGameController : MonoBehaviour
     private enum PieceType { None, Pawn, Knight, Bishop, Rook, Queen, King }
     private enum PieceColor { White, Black }
 
+    [Header("AI Settings")]
+    [SerializeField] private bool _playerIsWhite = true;
+    [SerializeField] private int _aiSearchDepth = 4;
+    [SerializeField] private float _aiMoveDelay = 0.5f;
+
+    private ChessAI _chessAI;
+    private float _aiMoveTimer = 0f;
+    private bool _waitingForAIMove = false;
+
     private struct Piece
     {
         public PieceType Type;
@@ -66,12 +75,24 @@ public class ChessGameController : MonoBehaviour
         BuildBoardVisuals();
         SetupInitialBoard();
         RefreshPieceViews();
+        _chessAI = new ChessAI();
         LogTurn();
     }
 
     private void Update()
     {
-        HandleMouseInput();
+        if (_waitingForAIMove)
+        {
+            _aiMoveTimer -= Time.deltaTime;
+            if (_aiMoveTimer <= 0f)
+            {
+                ExecuteAIMove();
+            }
+        }
+        else
+        {
+            HandleMouseInput();
+        }
     }
 
     private void CreateRuntimeSquareSprite()
@@ -312,11 +333,52 @@ public class ChessGameController : MonoBehaviour
         }
 
         LogTurn();
+
+        // Check if it's AI's turn
+        bool isAITurn = (_playerIsWhite && _turn == PieceColor.Black) || (!_playerIsWhite && _turn == PieceColor.White);
+        if (isAITurn)
+        {
+            _waitingForAIMove = true;
+            _aiMoveTimer = _aiMoveDelay;
+        }
     }
 
     private void LogTurn()
     {
         Debug.Log($"Turn: {_turn}");
+    }
+
+    private void ExecuteAIMove()
+    {
+        _waitingForAIMove = false;
+
+        // Convert internal board to ChessAI format
+        ChessAI.Piece[,] aiBoard = new ChessAI.Piece[8, 8];
+        for (int y = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                Piece piece = _board[x, y];
+                aiBoard[x, y] = new ChessAI.Piece
+                {
+                    Type = (ChessAI.PieceType)piece.Type,
+                    Color = (ChessAI.PieceColor)piece.Color,
+                    HasMoved = piece.HasMoved
+                };
+            }
+        }
+
+        // Get AI move
+        ChessAI.PieceColor aiColor = _playerIsWhite ? ChessAI.PieceColor.Black : ChessAI.PieceColor.White;
+        AIMove aiMove = _chessAI.FindBestMove(aiBoard, aiColor, _aiSearchDepth);
+
+        // Execute the move
+        if (aiMove.From != aiMove.To)
+        {
+            MovePiece(aiMove.From, aiMove.To);
+            ClearSelection();
+            EndTurnAndEvaluateState();
+        }
     }
 
     private bool PlayerHasAnyLegalMove(PieceColor color)
