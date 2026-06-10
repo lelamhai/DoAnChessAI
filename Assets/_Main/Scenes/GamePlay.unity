@@ -2026,7 +2026,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _playerIsWhite: 1
-  _aiSearchDepth: 1
+  _aiSearchDepth: 4
   _aiMoveDelay: 0.5
   squareSize: 1
   boardCenter: {x: 0, y: 0}
@@ -2050,7 +2050,7 @@ MonoBehaviour:
   blackKing: {fileID: 21300000, guid: 24a01576a91644e45ba79b9813b62a1d, type: 3}
   panelWin: {fileID: 1728144421}
   panelLose: {fileID: 410493360}
-  txtPlayer: {fileID: 1763832157}
+  txtPlayer: {fileID: 926075411}
   txtAI: {fileID: 406025405}
 --- !u!4 &2137640643
 Transform:
