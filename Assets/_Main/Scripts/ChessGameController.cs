@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -55,6 +57,12 @@ public class ChessGameController : MonoBehaviour
     [SerializeField] private Sprite blackQueen;
     [SerializeField] private Sprite blackKing;
 
+    [Header("Panel")]
+    [SerializeField] private GameObject panelWin;
+    [SerializeField] private GameObject panelLose;
+    [SerializeField] private TMP_Text txtPlayer;
+    [SerializeField] private TMP_Text txtAI;
+
     private Piece[,] _board = new Piece[8, 8];
     private ChessSquare[,] _squares = new ChessSquare[8, 8];
 
@@ -73,9 +81,34 @@ public class ChessGameController : MonoBehaviour
     {
         CreateRuntimeSquareSprite();
         BuildBoardVisuals();
+        _chessAI = new ChessAI();
+        ResetGame();
+    }
+
+    public void ResetGame()
+    {
+        enabled = true;
+
+        _waitingForAIMove = false;
+        _aiMoveTimer = 0f;
+
+        _turn = PieceColor.White;
+        _hasSelection = false;
+        _selectedLegalMoves.Clear();
+
+        if (panelWin != null)
+        {
+            panelWin.SetActive(false);
+        }
+
+        if (panelLose != null)
+        {
+            panelLose.SetActive(false);
+        }
+
         SetupInitialBoard();
         RefreshPieceViews();
-        _chessAI = new ChessAI();
+        ClearHighlights();
         LogTurn();
     }
 
@@ -315,8 +348,20 @@ public class ChessGameController : MonoBehaviour
 
         if (!hasMove && inCheck)
         {
-            Debug.Log($"Checkmate! {Opponent(_turn)} wins.");
             enabled = false;
+            if(Opponent(_turn) == PieceColor.White)
+            {
+                int point = int.Parse(txtPlayer.text);
+                txtPlayer.text = (point + 1).ToString();
+                panelWin.SetActive(true);
+            }
+            else
+            {
+                int point = int.Parse(txtAI.text);
+                txtAI.text = (point + 1).ToString();
+                panelLose.SetActive(true);
+            }
+            Debug.Log($"Checkmate! {Opponent(_turn)} wins.");
             return;
         }
 
