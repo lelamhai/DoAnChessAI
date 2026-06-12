@@ -1,10 +1,7 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using TMPro;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public class ChessGameController : MonoBehaviour
 {
@@ -60,11 +57,16 @@ public class ChessGameController : MonoBehaviour
     [Header("Panel")]
     [SerializeField] private GameObject panelWin;
     [SerializeField] private GameObject panelLose;
+    [SerializeField] private GameObject panelDraw;
+    [SerializeField] private GameObject panelMenu;
+    [SerializeField] private GameObject panelLogin;
+    [SerializeField] private GameObject panelRegister;
     [SerializeField] private TMP_Text txtPlayer;
     [SerializeField] private TMP_Text txtAI;
 
     private Piece[,] _board = new Piece[8, 8];
     private ChessSquare[,] _squares = new ChessSquare[8, 8];
+    private readonly Dictionary<string, int> _repetitionCounts = new Dictionary<string, int>();
 
     private readonly List<GameObject> _pieceViews = new List<GameObject>();
 
@@ -106,7 +108,14 @@ public class ChessGameController : MonoBehaviour
             panelLose.SetActive(false);
         }
 
+        if (panelDraw != null)
+        {
+            panelDraw.SetActive(false);
+        }
+
         SetupInitialBoard();
+        _repetitionCounts.Clear();
+        RegisterCurrentPosition();
         RefreshPieceViews();
         ClearHighlights();
         LogTurn();
@@ -342,6 +351,7 @@ public class ChessGameController : MonoBehaviour
     private void EndTurnAndEvaluateState()
     {
         _turn = Opponent(_turn);
+        RegisterCurrentPosition();
 
         bool inCheck = IsKingInCheck(_turn, _board);
         bool hasMove = PlayerHasAnyLegalMove(_turn);
@@ -369,6 +379,24 @@ public class ChessGameController : MonoBehaviour
         {
             Debug.Log("Stalemate! Draw.");
             enabled = false;
+            panelDraw.SetActive(true);
+            return;
+        }
+
+        // Check insufficient material
+        if (!HasSufficientMaterial(_board))
+        {
+            Debug.Log("Draw! Insufficient material.");
+            enabled = false;
+            panelDraw.SetActive(true);
+            return;
+        }
+
+        if (HasThreefoldRepetition())
+        {
+            Debug.Log("Draw! Threefold repetition.");
+            enabled = false;
+            panelDraw.SetActive(true);
             return;
         }
 
@@ -776,6 +804,66 @@ public class ChessGameController : MonoBehaviour
         return c == PieceColor.White ? PieceColor.Black : PieceColor.White;
     }
 
+    private void RegisterCurrentPosition()
+    {
+        string key = GetPositionKey(_turn);
+        if (_repetitionCounts.ContainsKey(key))
+        {
+            _repetitionCounts[key]++;
+        }
+        else
+        {
+            _repetitionCounts[key] = 1;
+        }
+    }
+
+    private bool HasThreefoldRepetition()
+    {
+        string key = GetPositionKey(_turn);
+        return _repetitionCounts.TryGetValue(key, out int count) && count >= 3;
+    }
+
+    private string GetPositionKey(PieceColor sideToMove)
+    {
+        StringBuilder sb = new StringBuilder(256);
+        sb.Append((int)sideToMove).Append('|');
+
+        for (int y = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                Piece piece = _board[x, y];
+                sb.Append((int)piece.Type).Append(',')
+                  .Append((int)piece.Color).Append(',')
+                  .Append(piece.HasMoved ? 1 : 0).Append(';');
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private bool HasSufficientMaterial(Piece[,] board)
+    {
+        // Insufficient material if neither side has: Pawn, Rook, or Queen
+        // These are the only pieces that can deliver checkmate
+        for (int y = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                Piece piece = board[x, y];
+                if (piece.IsEmpty)
+                    continue;
+
+                // If there's a Pawn, Rook, or Queen, there's sufficient material
+                if (piece.Type == PieceType.Pawn || piece.Type == PieceType.Rook || piece.Type == PieceType.Queen)
+                    return true;
+            }
+        }
+
+        // Only kings, knights, and/or bishops remain - insufficient material
+        return false;
+    }
+
     private bool ContainsMove(List<Vector2Int> moves, Vector2Int target)
     {
         for (int i = 0; i < moves.Count; i++)
@@ -872,40 +960,4 @@ public class ChessGameController : MonoBehaviour
 
         return new Vector3(left + boardPos.x * squareSize, bottom + boardPos.y * squareSize, 0f);
     }
-
-#if UNITY_EDITOR
-    [ContextMenu("Auto Assign Sprites From _Main/Sprites")]
-    private void AutoAssignSpritesFromProject()
-    {
-        whitePawn = LoadSprite("white_pawn");
-        whiteKnight = LoadSprite("white_knight");
-        whiteBishop = LoadSprite("white_bishop");
-        whiteRook = LoadSprite("white_rook");
-        whiteQueen = LoadSprite("white_queen");
-        whiteKing = LoadSprite("white_king");
-
-        blackPawn = LoadSprite("black_pawn");
-        blackKnight = LoadSprite("black_knight");
-        blackBishop = LoadSprite("black_bishop");
-        blackRook = LoadSprite("black_rook");
-        blackQueen = LoadSprite("black_queen");
-        blackKing = LoadSprite("black_king");
-
-        boardSprite = LoadSprite("board");
-
-        EditorUtility.SetDirty(this);
-        Debug.Log("Auto assign sprite finished.");
-    }
-
-    private Sprite LoadSprite(string fileNameWithoutExtension)
-    {
-        string path = $"Assets/_Main/Sprites/{fileNameWithoutExtension}.png";
-        Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-        if (sprite == null)
-        {
-            Debug.LogWarning($"Cannot load sprite at: {path}");
-        }
-        return sprite;
-    }
-#endif
 }
