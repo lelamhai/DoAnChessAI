@@ -5,6 +5,8 @@ using TMPro;
 
 public class ChessGameController : MonoBehaviour
 {
+    public static ChessGameController Instance { get; private set; }
+
     private enum PieceType { None, Pawn, Knight, Bishop, Rook, Queen, King }
     private enum PieceColor { White, Black }
 
@@ -16,6 +18,8 @@ public class ChessGameController : MonoBehaviour
     private ChessAI _chessAI;
     private float _aiMoveTimer = 0f;
     private bool _waitingForAIMove = false;
+
+    public int AISearchDepth {get => _aiSearchDepth; set => _aiSearchDepth = value;}
 
     private struct Piece
     {
@@ -54,15 +58,7 @@ public class ChessGameController : MonoBehaviour
     [SerializeField] private Sprite blackQueen;
     [SerializeField] private Sprite blackKing;
 
-    [Header("Panel")]
-    [SerializeField] private GameObject panelWin;
-    [SerializeField] private GameObject panelLose;
-    [SerializeField] private GameObject panelDraw;
-    [SerializeField] private GameObject panelMenu;
-    [SerializeField] private GameObject panelLogin;
-    [SerializeField] private GameObject panelRegister;
-    [SerializeField] private TMP_Text txtPlayer;
-    [SerializeField] private TMP_Text txtAI;
+    
 
     private Piece[,] _board = new Piece[8, 8];
     private ChessSquare[,] _squares = new ChessSquare[8, 8];
@@ -79,12 +75,22 @@ public class ChessGameController : MonoBehaviour
     private Transform _piecesRoot;
     private Sprite _squareSprite;
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
     private void Start()
     {
         CreateRuntimeSquareSprite();
         BuildBoardVisuals();
         _chessAI = new ChessAI();
-        ResetGame();
+        // ResetGame();
     }
 
     public void ResetGame()
@@ -98,27 +104,14 @@ public class ChessGameController : MonoBehaviour
         _hasSelection = false;
         _selectedLegalMoves.Clear();
 
-        if (panelWin != null)
-        {
-            panelWin.SetActive(false);
-        }
-
-        if (panelLose != null)
-        {
-            panelLose.SetActive(false);
-        }
-
-        if (panelDraw != null)
-        {
-            panelDraw.SetActive(false);
-        }
-
         SetupInitialBoard();
         _repetitionCounts.Clear();
         RegisterCurrentPosition();
         RefreshPieceViews();
         ClearHighlights();
         LogTurn();
+
+        Debug.Log("==================="+_aiSearchDepth);
     }
 
     private void Update()
@@ -361,15 +354,17 @@ public class ChessGameController : MonoBehaviour
             enabled = false;
             if(Opponent(_turn) == PieceColor.White)
             {
-                int point = int.Parse(txtPlayer.text);
-                txtPlayer.text = (point + 1).ToString();
-                panelWin.SetActive(true);
+                // int point = int.Parse(txtPlayer.text);
+                // txtPlayer.text = (point + 1).ToString();
+                GameManager.Instance.HideAllPanels();
+                GameManager.Instance.ShowWinPanel();
             }
             else
             {
-                int point = int.Parse(txtAI.text);
-                txtAI.text = (point + 1).ToString();
-                panelLose.SetActive(true);
+                // int point = int.Parse(txtAI.text);
+                // txtAI.text = (point + 1).ToString();
+                GameManager.Instance.HideAllPanels();
+                GameManager.Instance.ShowLosePanel();
             }
             Debug.Log($"Checkmate! {Opponent(_turn)} wins.");
             return;
@@ -379,7 +374,8 @@ public class ChessGameController : MonoBehaviour
         {
             Debug.Log("Stalemate! Draw.");
             enabled = false;
-            panelDraw.SetActive(true);
+            GameManager.Instance.HideAllPanels();
+            GameManager.Instance.ShowDrawPanel();
             return;
         }
 
@@ -388,7 +384,8 @@ public class ChessGameController : MonoBehaviour
         {
             Debug.Log("Draw! Insufficient material.");
             enabled = false;
-            panelDraw.SetActive(true);
+            GameManager.Instance.HideAllPanels();
+            GameManager.Instance.ShowDrawPanel();
             return;
         }
 
@@ -396,7 +393,8 @@ public class ChessGameController : MonoBehaviour
         {
             Debug.Log("Draw! Threefold repetition.");
             enabled = false;
-            panelDraw.SetActive(true);
+            GameManager.Instance.HideAllPanels();
+            GameManager.Instance.ShowDrawPanel();
             return;
         }
 
