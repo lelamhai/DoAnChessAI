@@ -47,11 +47,27 @@ public class GameManager : MonoBehaviour
 
     public void ShowWinPanel()
     {
+        int point = int.Parse(txtPlayer.text);
+        txtPlayer.text = (point + 1).ToString();
         ShowPanel(panelWin);
+    }
+
+    public void ContinueGame()
+    {        
+        ChessGameController.Instance.ResetGame();
+        HideAllPanels();
+    }
+
+    public void Home()
+    {
+        HideAllPanels();
+        ShowMenuPanel();
     }
 
     public void ShowLosePanel()
     {
+        int point = int.Parse(txtAI.text);
+        txtAI.text = (point + 1).ToString();
         ShowPanel(panelLose);
     }
 
@@ -87,6 +103,4 @@ public class GameManager : MonoBehaviour
             panel.SetActive(active);
         }
     }
-
-    
 }

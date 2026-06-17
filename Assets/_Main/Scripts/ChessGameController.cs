@@ -354,15 +354,11 @@ public class ChessGameController : MonoBehaviour
             enabled = false;
             if(Opponent(_turn) == PieceColor.White)
             {
-                // int point = int.Parse(txtPlayer.text);
-                // txtPlayer.text = (point + 1).ToString();
                 GameManager.Instance.HideAllPanels();
                 GameManager.Instance.ShowWinPanel();
             }
             else
             {
-                // int point = int.Parse(txtAI.text);
-                // txtAI.text = (point + 1).ToString();
                 GameManager.Instance.HideAllPanels();
                 GameManager.Instance.ShowLosePanel();
             }

@@ -11,7 +11,7 @@ public class Login : MonoBehaviour
     [SerializeField] private TMP_InputField passwordTMPInput;
 
 
-    private string baseUrl = "https://localhost:7131";
+    private string baseUrl = "https://lelamhai-001-site1.ftempurl.com";
     private string login = "/api/ControllerUser/login";
     
     public void OnLoginButtonPressed()

@@ -9,7 +9,7 @@ public class Register : MonoBehaviour
     [SerializeField] private TMP_InputField usernameTMPInput;
     [SerializeField] private TMP_InputField passwordTMPInput;
 
-    private string baseUrl = "https://localhost:7131";
+    private string baseUrl = "https://lelamhai-001-site1.ftempurl.com";
     private string register = "/api/ControllerUser/register";
     
     public void OnRegisterButtonPressed()
