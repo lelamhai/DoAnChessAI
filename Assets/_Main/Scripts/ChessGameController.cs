@@ -104,6 +104,9 @@ public class ChessGameController : MonoBehaviour
         _hasSelection = false;
         _selectedLegalMoves.Clear();
 
+        // Tính AI depth dựa trên Elo của user
+        // CalculateAIDepthFromElo();
+
         SetupInitialBoard();
         _repetitionCounts.Clear();
         RegisterCurrentPosition();
@@ -111,7 +114,7 @@ public class ChessGameController : MonoBehaviour
         ClearHighlights();
         LogTurn();
 
-        Debug.Log("==================="+_aiSearchDepth);
+        Debug.Log("AI Search Depth: " + _aiSearchDepth);
     }
 
     private void Update()
@@ -413,6 +416,34 @@ public class ChessGameController : MonoBehaviour
     private void LogTurn()
     {
         Debug.Log($"Turn: {_turn}");
+    }
+
+    /// <summary>
+    /// Tính AI search depth dựa trên Elo của user
+    /// Linear Mapping: Elo < 1000 (D2), 1000-1400 (D3), 1400-1800 (D4), > 1800 (D5+)
+    /// </summary>
+    public void CalculateAIDepthFromElo()
+    {
+        int userElo = UserManager.Instance.Elo;
+
+        if (userElo < 1000)
+        {
+            _aiSearchDepth = 2; // Easy - AI yếu
+        }
+        else if (userElo < 1400)
+        {
+            _aiSearchDepth = 3; // Normal
+        }
+        else if (userElo < 1800)
+        {
+            _aiSearchDepth = 4; // Hard
+        }
+        else
+        {
+            _aiSearchDepth = 5; // Very Hard
+        }
+
+        Debug.Log($"User Elo: {userElo} → AI Depth: {_aiSearchDepth}");
     }
 
     private void ExecuteAIMove()

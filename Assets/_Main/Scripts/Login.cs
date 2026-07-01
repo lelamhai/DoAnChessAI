@@ -11,7 +11,8 @@ public class Login : MonoBehaviour
     [SerializeField] private TMP_InputField passwordTMPInput;
 
 
-    private string baseUrl = "https://lelamhai-001-site1.ftempurl.com";
+    //private string baseUrl = "https://lelamhai-001-site1.ftempurl.com";
+    private string baseUrl = "https://localhost:7131";
     private string login = "/api/ControllerUser/login";
     
     public void OnLoginButtonPressed()
@@ -43,6 +44,10 @@ public class Login : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("Login successful: " + request.downloadHandler.text);
+                
+                // Lưu thông tin user
+                UserManager.Instance.SaveUserData(request.downloadHandler.text);
+                
                 GameManager.Instance.HideAllPanels();
                 GameManager.Instance.ShowMenuPanel();
             }

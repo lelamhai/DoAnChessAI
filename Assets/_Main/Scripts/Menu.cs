@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class Menu : MonoBehaviour
 {
+    public void CalculateAIDepthFromElo()
+    {
+        ChessGameController.Instance.CalculateAIDepthFromElo();
+        ChessGameController.Instance.ResetGame();
+        GameManager.Instance.HideAllPanels();
+    }    
+
     public void EasyMode()
     {
         ChessGameController.Instance.AISearchDepth = 2;
