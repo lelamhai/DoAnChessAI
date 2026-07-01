@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class Menu : MonoBehaviour
 {
+    private void OnEnable()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.UpdateUserInfoDisplay();
+        }
+    }
+
     public void CalculateAIDepthFromElo()
     {
         ChessGameController.Instance.CalculateAIDepthFromElo();

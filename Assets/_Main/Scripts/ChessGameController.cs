@@ -418,10 +418,7 @@ public class ChessGameController : MonoBehaviour
         Debug.Log($"Turn: {_turn}");
     }
 
-    /// <summary>
-    /// Tính AI search depth dựa trên Elo của user
-    /// Linear Mapping: Elo < 1000 (D2), 1000-1400 (D3), 1400-1800 (D4), > 1800 (D5+)
-    /// </summary>
+    
     public void CalculateAIDepthFromElo()
     {
         int userElo = UserManager.Instance.Elo;

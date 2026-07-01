@@ -20,6 +20,9 @@ public class Login : MonoBehaviour
         var username = usernameTMPInput != null ? usernameTMPInput.text : string.Empty;
         var password = passwordTMPInput != null ? passwordTMPInput.text : string.Empty;
 
+        // Xóa dữ liệu user cũ trước khi login
+        UserManager.Instance.ClearUserData();
+
         StartCoroutine(LoginCoroutine(username, password));
     }
 
